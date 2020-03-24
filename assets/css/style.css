@@ -9,7 +9,7 @@ table {
 }
 
 td {
-    background-color: darkslategray;
+    /* background-color: darkslategray; */
     border-radius: 5px;
 }
 
@@ -18,3 +18,63 @@ td {
     margin-top: 5rem;
     margin-bottom: 5rem;
 }
+
+form {
+    background-color: cornsilk;
+    color: darkblue;
+    font-size: medium;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.form-bgcolor {
+    position: fixed;
+    right: 20px;
+    top: 10px;
+}
+
+/* $color: #0cf; */
+
+button {
+    display: inline-block;
+    padding: .3rem .5rem;
+    border-radius: 0.5rem;
+    border:0;
+    color: #fff;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: .15rem;
+    transition: all .3s;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+button::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: hsl(180,0%,50%);
+        border-radius: 0.5rem;
+        z-index: -2;
+}
+button::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0%;
+        height: 100%;
+        background-color: hsl(180,0%,20%);
+        transition: all .3s;
+        border-radius: 0.5rem;
+        z-index: -1;
+    }
+button:hover {
+        color: #fff;
+    }
+button:hover::before {
+        width: 100%;
+    }
