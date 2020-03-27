@@ -10,6 +10,7 @@ if(isset($_GET["setbgcolor"]) && !empty($_POST["newbgcolor"])  ) // && isset($_P
 $cookie_color = (isset($_COOKIE['bgcolor'])) ? $_COOKIE['bgcolor'] : 'slategray';
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,6 +100,7 @@ if( isset($_GET["add_salle"]) && !empty($_GET["id"]) ) {
 
     if(!isset($_POST['submit'])) {
 
+        $editing_salle = true;
         $form_salle = "visible";
         $add_to_id = $_GET["id"];
 
@@ -108,18 +110,67 @@ if( isset($_GET["add_salle"]) && !empty($_GET["id"]) ) {
     $salle_capa = trim($_POST['salle_capa']);
     $salle_numero = trim($_POST['salle_numero']);
 
-    $sql = $dbh->prepare ("INSERT INTO salle (nom_cinema,adresse_cinema,ville_cinema,mail_cinema,telephone_cinema)
+    $sql = $dbh->prepare ("INSERT INTO salle (numero_salle,capacite_salle)
                     
-                        VALUES (:nom_cinema,:adresse_cinema,:ville_cinema,:mail_cinema,:telephone_cinema)");
+                        VALUES (:numero_salle,:capacite_salle)");
 
                     $sql->execute(array(
-                        'numero_salle' => $numero_salle,
-                        'adresse_cinema' => $cine_adress
+                        'numero_salle' => $salle_numero,
+                        'capacite_salle' => $salle_capa
                     ));
                     $sql-> closeCursor();
                     // header('location:../test.php');
     }
 }
+
+$equipement_salle = array();
+
+if( isset($_GET["edit_salle"]) && !empty($_GET["id"]) ) {
+
+    $editing_salle = true;
+
+    if(!isset($_POST['submit'])) {
+
+        $action="index.php?edit_salle&id=".$_GET["id"];
+
+        $form_salle = "visible";
+        $edit_salle_id = $_GET["id"];
+
+        $stmt_equip = $dbh->prepare("SELECT id_equipement FROM avoir WHERE id_salle=$edit_salle_id");
+        $stmt_equip->execute();
+
+        /* Récupération de toutes les valeurs de la première colonne */
+        $equipement_salle = $stmt_equip->fetchAll(PDO::FETCH_COLUMN, 0);
+        var_dump($equipement_salle);
+
+    } else {
+
+        $salle_capa = trim($_POST['salle_capa']);
+        $salle_numero = trim($_POST['salle_numero']);
+
+        $sql = $dbh->prepare ("DELETE FROM avoir WHERE id_salle = ".$_GET["id"]);
+        $sql->execute();
+
+        $sql = $dbh->prepare ("UPDATE salle 
+                                SET numero_salle=:numero_salle, capacite_salle=:capacite_salle
+                                WHERE id_salle=".$_GET["id"]);
+
+                        $sql->execute(array(
+                            'numero_salle' => $salle_numero,
+                            'capacite_salle' => $salle_capa
+                        ));
+                        $sql-> closeCursor();
+        foreach($_POST['equip_checkbox'] as $selected){
+            $sql = $dbh->prepare ("INSERT INTO avoir (id_salle,id_equipement) VALUES (:id_salle,:id_equipement)");
+
+            $sql->execute(array(
+                    'id_salle' => $_GET["id"],
+                    'id_equipement' => $selected
+            ));
+        }
+    }
+}
+
 ?>
 
 
@@ -189,77 +240,99 @@ if( isset($_GET["add_salle"]) && !empty($_GET["id"]) ) {
                             while( $l=$nom_equipement->fetchObject() ) {
                                     echo "$l->nom_equipement<br>";
                             }
-                        }                    
-
-
-                    echo '</td></tr>
-                    ';
+                        }
+                    echo '</td>';
+                    echo '<td><a href="index.php?edit_salle&id='.$row->id_salle.'">Editer Salle</a></td></tr>';
                 }            
                 echo '</table></div>';
             }
 ?>            
 </div>
 
+<div class="form-container">
 
-<div class="form-add-cinema">
+    <div class="form-add-cinema">
 
-    Ajouter un cinéma :
-    <form action="<?php echo $action?>" method="POST">
+        Ajouter un cinéma :
+        <form action="<?php echo $action?>" method="POST">
 
-        <div>
-            <label>Nom :</label>
-            <input type="text" name="cine_name" id="cine_name" placeholder="Entrer le nom du cinéma" <?php echo $editing?'value="'.$cinema_editing->nom_cinema.'"':"" ?> maxlength="50" required>
-        </div>
-        <div>
-            <label>Ville :</label>
-            <input type="text" name="cine_town" id="cine_town" placeholder="Entrer la ville du cinéma" <?php echo $editing?'value="'.$cinema_editing->ville_cinema.'"':"" ?> maxlength="50" required>
-        </div>
-        <div>
-            <label>Adresse :</label>
-            <input type="text" name="cine_adress" id="cine_adress" placeholder="Entrer l'adresse' du cinéma" <?php echo $editing?'value="'.$cinema_editing->adresse_cinema.'"':"" ?> maxlength="100" required>
-        </div>
-        <div>
-            <label>Mail :</label>
-            <input type="text" name="cine_mail" id="cine_mail" placeholder="Entrer l'email du cinéma" <?php echo $editing?'value="'.$cinema_editing->mail_cinema.'"':"" ?> maxlength="100" required>
-        </div>
-        <div>
-            <label>Telephone :</label>
-            <input type="text" name="cine_phone" id="cine_phone" placeholder="Entrer le numéro du cinéma" <?php echo $editing?'value="'.$cinema_editing->telephone_cinema.'"':"" ?> maxlength="25" required>
-        </div>
+            <div>
+                <label>Nom :</label>
+                <input type="text" name="cine_name" id="cine_name" placeholder="Entrer le nom du cinéma" <?php echo $editing?'value="'.$cinema_editing->nom_cinema.'"':"" ?> maxlength="50" required>
+            </div>
+            <div>
+                <label>Ville :</label>
+                <input type="text" name="cine_town" id="cine_town" placeholder="Entrer la ville du cinéma" <?php echo $editing?'value="'.$cinema_editing->ville_cinema.'"':"" ?> maxlength="50" required>
+            </div>
+            <div>
+                <label>Adresse :</label>
+                <input type="text" name="cine_adress" id="cine_adress" placeholder="Entrer l'adresse' du cinéma" <?php echo $editing?'value="'.$cinema_editing->adresse_cinema.'"':"" ?> maxlength="100" required>
+            </div>
+            <div>
+                <label>Mail :</label>
+                <input type="text" name="cine_mail" id="cine_mail" placeholder="Entrer l'email du cinéma" <?php echo $editing?'value="'.$cinema_editing->mail_cinema.'"':"" ?> maxlength="100" required>
+            </div>
+            <div>
+                <label>Telephone :</label>
+                <input type="text" name="cine_phone" id="cine_phone" placeholder="Entrer le numéro du cinéma" <?php echo $editing?'value="'.$cinema_editing->telephone_cinema.'"':"" ?> maxlength="25" required>
+            </div>
 
-        <button type="submit" name="submit"><?php echo $editing?"Editer Cinéma":"Ajouter Cinéma"?></button>
+            <button type="submit" name="submit"><?php echo $editing?"Editer Cinéma":"Ajouter Cinéma"?></button>
 
-    </form>
+        </form>
+
+    </div>
+
+
+    <div class="form-add-salle" style="visibility:<?php echo $form_salle; ?>">
+        <?php
+            $stmt_nom_cinema = $dbh->prepare("SELECT nom_cinema FROM cinema WHERE id_cinema=".$_GET["id"]);
+            $stmt_cinema->execute();
+            $cinema = $stmt_cinema->fetch(PDO::FETCH_OBJ);
+            echo '<h4>Ajouter une salle à ' . $cinema->nom_cinema . ' :</h4>';
+
+            $stmt_salle = $dbh->prepare("SELECT numero_salle, capacite_salle FROM salle WHERE id_salle=".$_GET["id"]);
+            $stmt_salle->execute();
+            $salle = $stmt_salle->fetch(PDO::FETCH_OBJ);
+
+            $stmt_liste_equipement = $dbh->prepare("SELECT * FROM equipement");
+            $stmt_liste_equipement->execute();
+        ?>
+
+        <form action="<?php echo $action;?>" method="POST">
+
+            <div>
+                <label>Numéro :</label>
+                <input type="text" name="salle_numero" id="salle_numero" placeholder="Numéro" <?php echo $editing_salle?'value="'.$salle->numero_salle.'"':"" ?> maxlength="5" required>
+            </div>
+            <div>
+                <label>Capacité :</label>
+                <input type="text" name="salle_capa" id="salle_capa" placeholder="Capacité" <?php echo $editing_salle?'value="'.$salle->capacite_salle.'"':"" ?> maxlength="5" required>
+            </div>
+
+            <div> <!-- Equipements -->
+                <label>Equipements :</label>
+                <?php
+                    while ($liste_equipement = $stmt_liste_equipement->fetch(PDO::FETCH_OBJ))
+                    {
+                    echo '
+                        <input type="checkbox" id="equip_checkbox_'.$liste_equipement->id_equipement.'" name="equip_checkbox[]" value="'.$liste_equipement->id_equipement.'" '.
+                            ((in_array($liste_equipement->id_equipement,$equipement_salle))?'checked':'')
+                            .'><label for="'.$liste_equipement->id_equipement.'">'.$liste_equipement->nom_equipement.'</label>
+                    ';
+                    }
+                ?>
+
+
+            </div>
+
+            <button type="submit" name="submit"><?php echo $editing_salle?"Editer Salle":"Ajouter Salle"?></button>
+
+        </form>
+
+    </div>
 
 </div>
-
-
-<div class="form-add-salle" style="visibility:<?php echo $form_salle; ?>">
-    <?php
-        $stmt_nom_cinema = $dbh->prepare("SELECT nom_cinema FROM cinema WHERE id_cinema=".$_GET["id"]);
-        $stmt_cinema->execute();
-        $cinema = $stmt_cinema->fetch(PDO::FETCH_OBJ);
-        echo '<h4>Ajouter une salle à ' . $cinema->nom_cinema . ' :</h4><br>';
-    ?>
-
-    <form action="<?php echo $action;?>" method="POST">
-
-        <div>
-            <label>Numéro :</label>
-            <input type="text" name="salle_numero" id="salle_numero" placeholder="Numéro" <?php echo $editing_salle?'value="'."".'"':"" ?> maxlength="5" required>
-        </div>
-        <div>
-            <label>Capacité :</label>
-            <input type="text" name="salle_capa" id="salle_capa" placeholder="Capacité" <?php echo $editing_salle?'value="'."".'"':"" ?> maxlength="5" required>
-        </div>
-
-        <button type="submit" name="submit"><?php echo $editing_salle?"Editer Salle":"Ajouter Salle"?></button>
-
-    </form>
-
-</div>
-
-
 
 <div class="form-bgcolor">
     <form action="index.php?setbgcolor" method="POST">

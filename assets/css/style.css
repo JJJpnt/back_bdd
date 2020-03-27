@@ -4,12 +4,23 @@ body {
     font-size: small;
 }
 
+a {
+    color: floralwhite;
+    font-weight: normal;
+    text-decoration: none;
+}
+
+a:hover {
+    color: white;
+    font-weight: 900;
+}
+
 table {
     margin-right: 1.25rem;
 }
 
 td {
-    /* background-color: darkslategray; */
+    background-color: darkslategray;
     border-radius: 5px;
 }
 
@@ -78,3 +89,8 @@ button:hover {
 button:hover::before {
         width: 100%;
     }
+
+.form-container {
+    display: flex;
+    justify-content: space-around;
+}
